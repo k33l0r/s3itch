@@ -20,23 +20,32 @@ class S3itchApp < Sinatra::Base
   put '/:name' do
     retries = 0
     begin
-      content_type = if MIME::Types.type_for(params[:name]).any?
-        MIME::Types.type_for(params[:name]).first.content_type
+      # Skitch does not encode question marks, so we have to recombine the
+      # name here if necessary
+      name = if request.query_string
+        "#{params[:name]}?#{request.query_string}"
+      else
+        params[:name]
+      end
+
+      content_type = if MIME::Types.type_for(name).any?
+        MIME::Types.type_for(name).first.content_type
       else
         "application/octet-stream"
       end
 
       file = bucket.files.create({
-        key: params[:name],
+        key: name,
         public: true,
         body: request.body.read,
         content_type: content_type,
         metadata: { "Cache-Control" => 'public, max-age=315360000'}
       })
-      puts "Uploaded file #{params[:name]} to S3"
-      redirect "http://#{ENV['S3_BUCKET']}/#{params[:name]}", 201
+
+      puts "Uploaded file #{name} to S3"
+      redirect "http://#{ENV['S3_BUCKET']}/#{name}", 201
     rescue => e
-      puts "Error uploading file #{params[:name]} to S3: #{e.message}"
+      puts "Error uploading file #{name} to S3: #{e.message}"
       if e.message =~ /Broken pipe/ && retries < 5
         retries += 1
         retry
