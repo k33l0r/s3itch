@@ -4,6 +4,7 @@ Bundler.setup
 require 'sinatra'
 require 'fog'
 require 'mime/types'
+require 'uri'
 
 class S3itchApp < Sinatra::Base
 
@@ -22,7 +23,7 @@ class S3itchApp < Sinatra::Base
     begin
       # Skitch does not encode question marks, so we have to recombine the
       # name here if necessary
-      name = if request.query_string
+      name = if request.query_string && !request.query_string.empty?
         "#{params[:name]}?#{request.query_string}"
       else
         params[:name]
@@ -43,7 +44,7 @@ class S3itchApp < Sinatra::Base
       })
 
       puts "Uploaded file #{name} to S3"
-      redirect "http://#{ENV['S3_BUCKET']}/#{name}", 201
+      redirect URI.escape("http://#{ENV['S3_BUCKET']}/#{name}"), 201
     rescue => e
       puts "Error uploading file #{name} to S3: #{e.message}"
       if e.message =~ /Broken pipe/ && retries < 5
