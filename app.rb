@@ -17,6 +17,10 @@ class S3itchApp < Sinatra::Base
     end
   end
 
+  get "/" do
+    "OK"
+  end
+
   # A custom tweetbot endpoint
   # Configure in tweetbot as:
   # http://user:pass@hostname/tweetbot/
@@ -41,7 +45,7 @@ class S3itchApp < Sinatra::Base
         return "<mediaurl>#{ENV['S3_BUCKET']}/#{file.key}</mediaurl>"
       end
     rescue => e
-      puts "Error uploading file #{media[:name]} to S3: #{e.message}"
+      puts "Error uploading file #{media[:filename]} to S3: #{e.message}"
       if e.message =~ /Broken pipe/ && retries < 5
         retries += 1
         retry
