@@ -22,7 +22,7 @@ class S3itchApp < Sinatra::Base
   # Configure in tweetbot as:
   # http://user:pass@hostname/tweetbot/
   # for images and (untested) videos
-  post '/tweetbot/*' do
+  post '/tweetbot/?*' do
     retries = 0
     begin
       r = b62ts
